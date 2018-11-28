@@ -99,9 +99,11 @@ export default {
             }
         ],
           pass: [
+            { required: true, message: '密码不能为空', trigger: 'blur'},
             { validator: validatePass, trigger: 'blur' }
           ],
           checkPass: [
+            { required: true, message: '请确认密码', trigger: 'blur'},
             { validator: validatePass2, trigger: 'blur' }
           ],
           id:[

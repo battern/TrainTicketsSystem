@@ -5,9 +5,12 @@ import Login from '@/views/Login'
 import Home from '@/views/Home'
 import Signin from '@/views/Signin'
 import BookTicket from '@/views/BookTicket'
+import test from '@/views/test'
+import TicketInfo from '@/views/TicketInfo'
 Vue.use(Router)
 
 export default new Router({
+  mode:'history',
   routes: [
     {
       path: '/login',
@@ -30,7 +33,18 @@ export default new Router({
         name: '购票',
         component: BookTicket,
         
-      }
+      },{
+        path: '/test',
+        name: '测试',
+        component: test,
+       
+      },
+      {
+        path: '/ticketinfo',
+        name: '车票信息',
+        component: TicketInfo,
+       
+      },
         
       ]
     }
