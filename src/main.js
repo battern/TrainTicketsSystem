@@ -8,8 +8,9 @@ import 'element-ui/lib/theme-chalk/index.css';
 Vue.use(ElementUI);
 Vue.config.productionTip = false
 
-import traininfo from './components/traininfo/index.js'
-Vue.use(traininfo);
+
+import orderlist from './components/orderlist/index.js'
+Vue.use(orderlist)
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

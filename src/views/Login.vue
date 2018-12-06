@@ -8,8 +8,12 @@
         <el-form-item label="密码" prop="password" auto-complete="off" placeholder="密码">
           <el-input type="password" v-model="ruleForm2.password"></el-input>
         </el-form-item>
+        <el-form-item label="用户类别">
+          <el-radio v-model="ruleForm2.status" :label='1'>用户</el-radio>
+          <el-radio v-model="ruleForm2.status" :label='2'>管理员</el-radio>
+        </el-form-item>
         <el-form-item style="width:100%;">
-          <el-button  @click.native.prevent="handleSubmit2" type="primary" style="width:100%;"  >登录</el-button>
+          <el-button  @click.native.prevent="handleSubmit2" type="primary" style="width:100%;"  :loading="logining" >登录</el-button>
         </el-form-item>
         <el-form-item>
           <el-row>
@@ -23,7 +27,7 @@
 </template>
 
 <script>
-//import { requestLogin } from '../api/api';
+import { requestLogin } from '../request/api';
   //import NProgress from 'nprogress'
   export default {
       data(){
@@ -41,17 +45,19 @@
         }, 1000);
       };
         return{
-          user:{name:'hah',type:'jj'},
+          logining: false,//控制登录按钮的缓存
+          user:{name:'hah',type:'1',idcard:'12356',tele:'100'},
           //自定规则
             ruleForm2:{
               username:'',
-              password:''
+              password:'',
+              status:1
             },
             rules2:{
               username:[{required: true, message: '请输入用户名', trigger: 'blur'}],
               password:[
                 {required: true, message: '请输入密码', trigger: 'blur'},
-               {min:6,max:10,message:'长度在6到10个字符',trigger:'blur'}
+              //  {min:6,max:10,message:'长度在6到10个字符',trigger:'blur'}
                //{validator: checkPass, trigger: 'blur'}
               ]
             }
@@ -65,25 +71,24 @@
         var _this = this;
         this.$refs.ruleForm2.validate((valid) => {
           if (valid) {
-            // this.logining = true;
-           
-            // var loginParams = { username: this.ruleForm2.username, password: this.ruleForm2.password };
-            // requestLogin(loginParams).then(data => {
-            //   this.logining = false;
+            _this.logining = true;
+            var loginParams = { username: this.ruleForm2.username, password: this.ruleForm2.password,status:this.ruleForm2.status };
+            requestLogin(loginParams).then(res => {
               
-            //   let { msg, code, user } = data;
-            //   if (code !== 200) {
-            //     this.$message({
-            //       message: msg,
-            //       type: 'error'
-            //     });
-            //   } else {
-            //     sessionStorage.setItem('user', JSON.stringify(user));
-            //     this.$router.push({ path: '/table' });
-            //   }
-            // });
-            sessionStorage.setItem('user', JSON.stringify(this.user));
-            this.$router.push({ path: '/getTicket' });
+              this.logining = false;
+              console.log(res);
+              if (res.status !== 200||res.data.condition==-1) {
+                this.$message({
+                  message: "账户或密码错误",
+                  type: 'error'
+                });
+              } else {
+                sessionStorage.setItem('user', JSON.stringify(res.data.data));
+                sessionStorage.setItem('userstatus', this.ruleForm2.status);
+                this.$router.push({ path: '/getTicket' });
+              
+              }
+            });
           } else {
             console.log('error submit!!');
             return false;
@@ -95,6 +100,19 @@
           this.$router.push({path:'/signin'})
       }
       },
+      created(){
+        let info = this.$router.history.current.params;
+        console.log(info)
+    //防止F5刷新丢失信息
+      if (info) {
+        sessionStorage.setItem("signinfo", JSON.stringify(info) );
+      }
+      let myinfo =JSON.parse(sessionStorage.getItem("signinfo"))
+      console.log(myinfo)
+      this.ruleForm2.username=myinfo.username;
+      this.ruleForm2.password=myinfo.password;
+      }
+      
       
 
 

@@ -1,5 +1,5 @@
 <template>
-    <traininfo></traininfo>
+    <orderlist></orderlist>
 </template>
 
 <script>

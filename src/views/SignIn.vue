@@ -18,7 +18,7 @@
                 <el-input v-model="ruleForm2.tele"></el-input>
             </el-form-item>
             <el-form-item>
-                <el-button type="primary" @click="submitForm('ruleForm2')">提交</el-button>
+                <el-button type="primary"  @click="submitForm('ruleForm2')" >提交</el-button>
                 <el-button @click="resetForm('ruleForm2')">重置</el-button>
             </el-form-item>
         </el-form>
@@ -26,6 +26,7 @@
 </template>
 
 <script>
+import { requestSign } from '../request/api';
 export default {
     data() {
       /**
@@ -49,19 +50,16 @@ export default {
     }
       };
       var checkTele = (rule, value, callback) => {
-        setTimeout(() => {
           if (!value) {
           return callback(new Error('手机号不能为空'));
         } else {
           const reg = /^1[3|4|5|7|8][0-9]\d{8}$/
-          console.log(reg.test(value));
           if (reg.test(value)) {
             callback();
           } else {
             return callback(new Error('请输入正确的手机号'));
           }
         }
-        }, 1000);
       };
       
       var validatePass = (rule, value, callback) => {
@@ -84,6 +82,7 @@ export default {
         }
       };
       return {
+        logining:false,//提交缓冲
         ruleForm2: {
           pass: '',
           checkPass: '',
@@ -107,7 +106,8 @@ export default {
             { validator: validatePass2, trigger: 'blur' }
           ],
           id:[
-              { required: true, message: '证件号码不能为空', trigger: 'blur' }
+              { required: true, message: '证件号码不能为空', trigger: 'blur' },
+              {validator: checkID, trigger: 'blur'}
           ],
           tele:[
               { required: true, message: '电话号码不能为空', trigger: 'blur' },
@@ -121,7 +121,29 @@ export default {
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            alert('submit!');
+            let para={idcard:this.ruleForm2.id,username:this.ruleForm2.username,password:this.ruleForm2.pass,tele:this.ruleForm2.pass};
+            requestSign(para).then(res=>{
+              if(res.data.info==-1){
+                this.$message({
+                  message:"身份证已注册",
+                  type:'error'
+                })
+              }
+              else if(res.data.info==-2){
+                this.$message({
+                  message:"用户名已注册",
+                  type:'error'
+                })
+              }
+              else{
+                this.$message({
+                  message:"注册成功",
+                  type: 'success'
+                })
+                this.$router.push({ name:'登录',params:{username:this.ruleForm2.username,password:this.ruleForm2.pass} });
+              }
+            });
+            
           } else {
             console.log('error submit!!');
             return false;
