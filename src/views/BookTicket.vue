@@ -1,10 +1,10 @@
 <template>
 <div>
-    <el-form :model="form" ref="form" inline=true  :rules="rules" label-width="80px" style="margin:20px;width:80%;min-width:600px;">
-       
+    <el-form :model="form" ref="form" :inline='true'  :rules="rules" >
+       <h3>{{handletype}}</h3>
             <el-form-item label="出发地:"  prop="begin" >
             <el-select v-model="form.begin" filterable  placeholder="请选择出发地" >
-                 <el-option v-for="(item,index) in AllCity" :key="index" :label="item.city" :value="item.city"></el-option>
+                 <el-option v-for="(item,index) in AllCity" :key="index" :label="item" :value="item"></el-option>
             </el-select>
         </el-form-item>
          <el-form-item>
@@ -14,7 +14,7 @@
          
             <el-form-item label="目的地:"  v-model="form.end" prop="end" >
             <el-select v-model="form.end" filterable  placeholder="请选择目的地" >
-                <el-option v-for="(item,index) in AllCity" :key="index" :label="item.city" :value="item.city"></el-option>
+                <el-option v-for="(item,index) in AllCity" :key="index" :label="item" :value="item"></el-option>
             </el-select>
         </el-form-item>
         <el-form-item label="日期" prop="date">
@@ -26,26 +26,24 @@
         </el-form-item>
     </el-form>
     <div class="cantainer">
-                    <el-table style="width: 100%;" :data="ticketslist" v-loading="listLoading">
+                    <el-table style="width: 100%;" :data="ticketslist.slice((currentPage-1)*pagesize,currentPage*pagesize)" v-loading="listLoading">
                         <template slot="empty">
                             <span>没有满足条件的车次</span>
                         </template>
                         <el-table-column type="index" width="100" align="center" label="序号">    
                         </el-table-column>
-                        <el-table-column label="车次" prop="trainid" width="200" align="center">    
+                        <el-table-column label="车次" prop="Tno_c" width="200" align="center">    
                         </el-table-column>
-                        <el-table-column label="发车时间" prop="begintime" width="120" align="center">    
+                        <el-table-column label="发车时间" prop="dtime" width="120" align="center">    
                         </el-table-column>
-                        <el-table-column label="出发站" prop="beginSta" width="120" align="center">    
+                       
+                        <el-table-column label="到达时间" prop="atime" width="120" align="center">    
                         </el-table-column>
-                        <el-table-column label="目的站" prop="endSta" width="120" align="center">    
+                        <el-table-column label="出发站" prop="sSname" width="120" align="center">    
                         </el-table-column>
-                        <el-table-column label="一等座" prop="one" width="120" align="center">    
-                        </el-table-column>  
-                        <el-table-column label="二等座" prop="two" width="120" align="center">    
-                        </el-table-column>  
-                        <el-table-column label="三等座" prop="three" width="120" align="center">    
+                        <el-table-column label="目的站" prop="eSname" width="120" align="center">    
                         </el-table-column>
+                        <!-- <el-table-column v-for="(item,index) in AllSeatType" :key="index" :label="item.seatname" :prop="item.seatname"></el-table-column> -->
                         <el-table-column label="预订" width="120" align="center" >
                           <template slot-scope="scope" >
                           <el-button size="small" @click="toBuyThisTicket(scope.$index, scope.row)">购买</el-button>
@@ -53,11 +51,12 @@
                         </el-table-column>
                     </el-table>
                         <el-pagination
+                            @current-change="handleCurrentChange"
                             :current-page="currentPage" 
                             :page-size="pagesize"       
                             layout="total,prev, pager, next, jumper"
-                            :total="total"
-                            @current-change="handleCurrentChange"
+                            :total="ticketslist.length"
+                           
                             > 
                     </el-pagination>
         </div>
@@ -65,9 +64,29 @@
 </template>
 
 <script>
+import { requestgetSeats,requestFindTrain,requestgetAllCity,isLogin } from '../request/api';
 export default {
     created(){
-        this.getAllCity();
+        let changeOrderID = this.$router.history.current.params.changeOrderID;
+        console.log(changeOrderID)
+        //防止F5刷新丢失信息
+          if (changeOrderID) {
+                sessionStorage.setItem("changeOrderID", changeOrderID );
+                this.handletype='请选择要改签的车票'
+          }else{
+            sessionStorage.setItem("changeOrderID", '' );
+        }
+        requestgetSeats().then(res=>{
+            this.AllSeatType=res.data
+            console.log(res)
+        })
+        //填充所有有车站的城市名
+        requestgetAllCity().then(res=>{
+            var temp = res.data;
+            for(var i=0;i<temp.length;i++){
+                this.AllCity.push(temp[i].Scity)
+            }
+        })
     },
     data(){
         return{
@@ -97,8 +116,8 @@ export default {
                         }
                     }]
             },
-
-            AllCity:[{city:'北京'},{city:'天津'},{city:'上海'},{city:'重庆'},{city:'河北'}],
+            AllSeatType:[],
+            AllCity:[],
             //表单验证属性
             form: {
                 begin: '',
@@ -111,48 +130,50 @@ export default {
                 date:[{required: true, message: '请输入出发日期', trigger: 'blur'},
                 ]
             },
+            //操作类型,买票,还是退票
+            handletype:'请选择要购买的车票',
             //分页属性
             listLoading:false,
             currentPage:1,
             total:0,
             pagesize:20,
             showDetail:false,
-            ticketslist://每页展示的数据,动态更新
-            [{trainid:'1',begintime:'2018-11-28'},
-            {trainid:'2',begintime:'2018-11-28'}],
+            ticketslist:[]//每页展示的数据,动态更新
         }
     },
     methods:{
-
-        //完成分页功能
-        handleCurrentChange(val) {
-				this.currentPage = val;//当前页
-				this.getTickets();//重新申请车票信息
+        handleCurrentChange:function(currentPage){
+            this.currentPage=currentPage;
+            console.log(this.currentPage)
         },
-
         toBuyThisTicket(index, row){//跳转去买票界面
-            this.$router.push({name:'买票',params:{'traininfo':JSON.stringify(Object.assign({}, row))}});
+            if(isLogin())
+                this.$router.push({name:'买票',params:{'traininfo':JSON.stringify(Object.assign({}, row))}});
+            else
+                this.$message({
+                    message:"请先登陆",
+                    type:'error',
+                })
         },
         handleReset2(){//重置
           this.$refs.form.resetFields();
         },
         
-        getAllCity(){//获取车站涉及到的所有城市
-
-        },
+        
         getTickets(){
             var _this = this;
             this.$refs.form.validate((valid) => {
                 if (valid) {
                     let para = {
-                            page: _this.currentPage,
-                            pagesize:_this.pagesize,
-                            form:_this.form
+                            scity:this.form.begin,
+                            ecity:this.form.end,
+                            dtime:this.form.date
                             };
             this.listLoading = true;
-            // getUserListPage(para).then((res) => {
-            // 	this.total = res.data.total;
-            // 	this.ticketslist = res.data.ticketslists;
+                requestFindTrain(para).then(res=>{
+                    console.log(res)
+                    this.ticketslist=res.data
+                })
                 this.listLoading = false;
             // });
         

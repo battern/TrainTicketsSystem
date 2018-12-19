@@ -9,7 +9,7 @@
         <el-dropdown trigger="hover">
 					<span class="el-dropdown-link userinfo-inner"> {{sysUserName}}</span>
 					<el-dropdown-menu slot="dropdown">
-						<el-dropdown-item v-show="usercondition!=0">个人信息</el-dropdown-item>
+						<el-dropdown-item v-show="usercondition==1" @click.native="gotoUserInfo">个人信息</el-dropdown-item>
 						<el-dropdown-item divided @click.native="logout" v-show="usercondition!=0">退出登录</el-dropdown-item>
             <el-dropdown-item v-show="usercondition==0" @click.native="login">进入登录页面</el-dropdown-item>
 					</el-dropdown-menu>
@@ -24,7 +24,7 @@
 					<template v-for="(item,index) in $router.options.routes" v-if="!item.hidden" >
 						<el-submenu :index="index+''" v-if="!item.leaf" :key="index">
 							<template slot="title"><i :class="item.iconCls"></i>{{item.name}}</template>
-							<el-menu-item v-for="child in item.children" :index="child.path" :key="child.path" v-if="!child.hidden&&child.status<=usercondition">{{child.name}}</el-menu-item>
+							<el-menu-item v-for="child in item.children" :index="child.path" :key="child.path" v-if="!child.hidden&&(child.status1==usercondition||child.status2==usercondition||child.status3==usercondition)">{{child.name}}</el-menu-item>
 						</el-submenu>
 						<el-menu-item v-if="item.leaf&&item.children.length>0" :index="item.children[0].path" :key="item.children[0].path"><i :class="item.iconCls" ></i>{{item.children[0].name}}</el-menu-item>
 					</template>
@@ -48,14 +48,15 @@
 			</aside>
   <section class="content-container">
 				<div class="grid-content bg-purple-light">
-					<el-col :span="24" class="breadcrumb-container">
-						<strong class="title">{{$route.name}}</strong>
-						<el-breadcrumb separator="/" class="breadcrumb-inner">
+					<!-- <el-col :span="24" class="breadcrumb-container"> -->
+						<!-- <strong class="title">{{$route.name}}</strong> -->
+						<!-- <el-breadcrumb separator="/" class="breadcrumb-inner">
 							<el-breadcrumb-item v-for="item in $route.matched" :key="item.path">
 								{{ item.name }}
 							</el-breadcrumb-item>
 						</el-breadcrumb>
-					</el-col>
+					</el-col> -->
+          
 					<el-col :span="24" class="content-wrapper">
 						<transition name="fade" mode="out-in">
 							<router-view></router-view>
@@ -86,14 +87,18 @@ export default {
 				this.$confirm('确认退出吗?', '提示', {
 					//type: 'warning'
 				}).then(() => {
-					sessionStorage.removeItem('user');
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('userstatus')
 					_this.$router.push('/login');
 				}).catch(() => {
 
 				});
 
 
-			},
+      },
+      gotoUserInfo(){
+        this.$router.push('/userinfo')
+      },
     handleopen() {
 				//console.log('handleopen');
 			},
@@ -113,8 +118,8 @@ export default {
       }
       
   },
-  mounted() {
-      //后去登录用户的权限
+  created(){
+    //后去登录用户的权限
       var status=sessionStorage.getItem('userstatus')
       if(status){
         this.usercondition=status
@@ -124,7 +129,14 @@ export default {
 				user = JSON.parse(user);
 				this.sysUserName = user.name || '';
 				
-			}
+      }
+      if(this.usercondition==2){
+        //this.$router.push({name:'买票',params:{'traininfo':JSON.stringify(Object.assign({}, row))}});
+        this.$router.push({name:'个人订单信息'});
+      }
+  },
+  mounted() {
+      
 
 		}
  

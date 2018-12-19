@@ -83,6 +83,8 @@ import { requestLogin } from '../request/api';
                   type: 'error'
                 });
               } else {
+                let user =res.data.data;
+                console.log(user);
                 sessionStorage.setItem('user', JSON.stringify(res.data.data));
                 sessionStorage.setItem('userstatus', this.ruleForm2.status);
                 this.$router.push({ path: '/getTicket' });

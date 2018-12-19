@@ -14,6 +14,9 @@
             <el-form-item label="身份证号" prop="id">
                 <el-input v-model="ruleForm2.id"></el-input>
             </el-form-item>
+            <el-form-item label="真实姓名" prop="name">
+                <el-input v-model="ruleForm2.name"></el-input>
+            </el-form-item>
             <el-form-item label="手机号码" prop="tele">
                 <el-input v-model="ruleForm2.tele"></el-input>
             </el-form-item>
@@ -88,7 +91,8 @@ export default {
           checkPass: '',
           username:'',
           id:'',
-          tele:''
+          tele:'',
+          name:''
         },
         rules2: {
           username:[
@@ -113,6 +117,7 @@ export default {
               { required: true, message: '电话号码不能为空', trigger: 'blur' },
               {validator: checkTele, trigger: 'blur'}
           ],
+          name:[{ required: true, message: '真实姓名不能为空', trigger: 'blur' }]
          
         }
       };
@@ -121,7 +126,7 @@ export default {
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            let para={idcard:this.ruleForm2.id,username:this.ruleForm2.username,password:this.ruleForm2.pass,tele:this.ruleForm2.pass};
+            let para={name:this.ruleForm2.name,idcard:this.ruleForm2.id,username:this.ruleForm2.username,password:this.ruleForm2.pass,tele:this.ruleForm2.tele};
             requestSign(para).then(res=>{
               if(res.data.info==-1){
                 this.$message({

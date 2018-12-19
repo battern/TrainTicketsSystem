@@ -1,13 +1,7 @@
 <template>
+    
     <el-form :model="ruleForm2" status-icon :rules="rules2" ref="ruleForm2" label-width="100px" class="demo-ruleForm">
-            <el-form-item label="车次名:" prop="trainname">
-                <el-input  v-model.number="ruleForm2.trainname" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="车次类型:"  >
-                    <el-select v-model="ruleForm2.traintype" placeholder="选择车次种类" @change="changeSeatType">
-                    <el-option v-for="(item,index) in AllTrainType " :key="index" :label="item.name" :value="item.value"></el-option>
-                    </el-select>
-            </el-form-item>
+        <h3>{{trainid}}</h3>
             <el-form-item label="空调类型:" >
                     <el-select v-model="ruleForm2.airtype" placeholder="请选择要添加的空调类型">
                     <el-option v-for="(item,index) in AllAirType " :key="index" :label="item.name" :value="item.value"></el-option>
@@ -17,7 +11,7 @@
             <el-row>
                 <el-col :span="8">
                 <el-form-item label="座位类型:" >
-                    <el-select v-model="seattype" placeholder="选择座位种类">
+                    <el-select v-model="seattype" placeholder="选择座位种类" >
                     <el-option v-for="(item,index) in AllSeatType " :key="index" :label="item.Seatname" :value="item.Seatname" v-if="(item.Seatno>=10&&item.Seatno<seatflag)||(item.Seatno<10&&item.Seatno>seatflag)"></el-option>
                     </el-select>
                 </el-form-item>
@@ -40,9 +34,8 @@
                         </template>
                         <el-table-column type="index" width="100" align="center" label="序号"></el-table-column>
                         <el-table-column label="座位类型" prop="seatname" width="200" align="center"></el-table-column>
-                        <el-table-column label="座位数量" prop="count" width="200" align="center"></el-table-column>
+                        <el-table-column label="座位数量" prop="tcount" width="200" align="center"></el-table-column>
                         <el-table-column
-                            
                             label="操作"
                             width="200">
                             <template slot-scope="scope">
@@ -56,11 +49,13 @@
                         </el-table-column>
                 </el-table>
             </el-form-item>
-            <el-row>
+            
+          
+               <el-row>
                 <el-col :span="4">
                 <el-form-item label="车站名称:" >
                     <el-select v-model="ruleForm2.stationname" placeholder="选择车站 ">
-                    <el-option v-for="(item,index) in AllStation " :key="index" :label="item.Sname" :value="item.Sname"></el-option>
+                    <el-option v-for="(item,index) in AllStation " :key="index" :label="item.spotname" :value="item.spotname"></el-option>
                     </el-select>
                 </el-form-item>
                 </el-col>
@@ -85,7 +80,8 @@
                     </el-form-item>
                 </el-col>
             </el-row>
-            <el-form-item>
+          
+           <el-form-item>
                 <el-table :data="ruleForm2.stationlist" height="250" style="width: 100%;">
                     <template slot="empty">
                             <span>未添加车站</span>
@@ -107,17 +103,62 @@
                         </el-table-column>
                 </el-table>
             </el-form-item>
-           
             <el-form-item>
-                <el-button type="primary"  @click="submitForm('ruleForm2')" >提交</el-button>
-                <el-button @click="resetForm('ruleForm2')">重置</el-button>
+                <el-button type="primary"  @click="submitForm('ruleForm2')" >更新</el-button>
+                <el-button @click="cancelForm">取消</el-button>
             </el-form-item>
         </el-form>
 </template>
 
 <script>
-import { requestgetSpots,requestgetSeats,requestaddTrain } from '../request/api';
+import { requestgetSpots,requestgetSeats,requestgetTrainInfo,requestupdateTrain } from '../request/api';
 export default {
+    created(){
+        let info = this.$router.history.current.params.trainid;
+    //防止F5刷新丢失信息
+      if (info) {
+        sessionStorage.setItem("trainid_edit",info );
+      }
+      let myinfo =sessionStorage.getItem("trainid_edit")
+      this.trainid=myinfo;
+        requestgetSeats().then(res=>{
+                //console.log(res)
+                this.AllSeatType=res.data
+                // for(var i=0;i<res.data.length;i++){
+                //     this.AllSeatType.push({spotname:res.data[i].Sname})
+                // }
+            })
+        requestgetSpots({spotname:''}).then(res=>{
+                //this.AllStation=res.data;
+                //console.log(res)
+                for( var i=0;i<res.data.length;i++){
+                    this.AllStation.push({spotname:res.data[i].Sname})
+                }
+            })
+
+        let para={
+            trainid:myinfo
+        }
+        console.log(para);
+        requestgetTrainInfo(para).then(res=>{
+            console.log("222");
+            console.log(res);
+            this.ruleForm2.airtype=res.data.airid;
+            //this.ruleForm2.stationlist=res.data.spotlist;
+            let spotlist=res.data.spotlist;
+            for(var i=0;i<res.data.spotlist.length;i++){
+                this.ruleForm2.stationlist.push({spotid:spotlist[i].Sno,spotname:spotlist[i].spotname,miles:spotlist[i].mile,arrivetime:spotlist[i].arrive,staytime:spotlist[i].stay})
+            }
+            this.ruleForm2.seat=res.data.seatlist;
+            console.log(this.ruleForm2.stationlist)
+            if(myinfo.slice(0,1)==='G'||myinfo.slice(0,1)==='D'){
+                this.seatflag=20;
+            }else{
+                this.seatflag=-1;
+            }
+            
+        })
+      },
     data(){
         var checkSeatNum = (rule, value, callback) => {//座位
             if(value=='')callback();
@@ -141,17 +182,16 @@ export default {
         
       };
         return{
+            trainid:'',
             AllSeatType:[],
             seattype:'',
             seatflag:20,//作为区分,不同车的座位类型
-            AllTrainType:[{name:'高铁',value:'G'},{name:'动车',value:'D'},{name:'特快',value:'T'},{name:'快速',value:'K'}],
             AllAirType:[{name:'有空调',value:1},{name:'无空调',value:0},{name:'新空调',value:2}],
             AllStation:[],
             ruleForm2: {
-                trainname: '',
+               
                 seat:[],
                 seatnum:'',
-                traintype:'G',
                 airtype:1,
                 stationlist:[],
                 stationname:'',
@@ -172,16 +212,6 @@ export default {
         }
     },
     methods:{
-        
-        //根据车次更改可以选择的座位类型
-        changeSeatType(){
-            //console.log("jjjj")
-            if(this.ruleForm2.traintype==='G'||this.ruleForm2.traintype==='D'){
-                this.seatflag=20;
-            }else{
-                this.seatflag=-1;
-            }
-        },
         deleteRow(index, rows) {//删除添加的座位
             rows.splice(index, 1);
         },
@@ -208,7 +238,6 @@ export default {
             
         },
         addStation(){
-            //console.log(this.ruleForm2)
             if(this.ruleForm2.stationname===''||this.ruleForm2.miles===''||this.ruleForm2.usingtime==='')
                 this.$message({
                     message:'请将信息填充完整',
@@ -218,9 +247,11 @@ export default {
                 var flag=0;
                 var flag2=-1;
                 for(var i=0;i<this.ruleForm2.stationlist.length;i++){
+
+                    
                     if(this.ruleForm2.stationname==this.ruleForm2.stationlist[i].spotname){
                         flag2=i;
-                        //console.log(flag2)
+                        console.log(flag2)
                     }else{
                         if(!((this.ruleForm2.miles>this.ruleForm2.stationlist[i].miles&&this.ruleForm2.usingtime>(this.ruleForm2.stationlist[i].arrivetime+this.ruleForm2.stationlist[i].staytime))//添加后来的车次
                         ||(this.ruleForm2.miles<this.ruleForm2.stationlist[i].miles&&this.ruleForm2.usingtime+this.ruleForm2.stoptime<this.ruleForm2.stationlist[i].arrivetime))
@@ -242,7 +273,6 @@ export default {
                         this.ruleForm2.stationlist[flag2].miles=this.ruleForm2.miles;
                         this.ruleForm2.stationlist[flag2].arrivetime=this.ruleForm2.usingtime;
                         this.ruleForm2.stationlist[flag2].staytime=this.ruleForm2.stoptime;
-                        
                     }
                     this.ruleForm2.stationlist=sortKey(this.ruleForm2.stationlist,'miles')
                     console.log(this.ruleForm2.stationlist)
@@ -250,48 +280,31 @@ export default {
             }
             
         },
+        cancelForm(){
+            		window.history.go(-1)
+
+        },
         submitForm(formName) {
-        this.$refs[formName].validate((valid) => {
-          if (valid) {
+        
             if(this.ruleForm2.stationlist.length==0||this.ruleForm2.seat.length==0)
                 this.$message({
                     message:"请将信息填充完整",
                     type:'error'
                 })
             else{
-                let train={trainid:(this.ruleForm2.traintype+this.ruleForm2.trainname),airid:this.ruleForm2.airtype,seatlist:this.ruleForm2.seat,spotlist:this.ruleForm2.stationlist}
+                let train={trainid:this.trainid,airid:this.ruleForm2.airtype,seatlist:this.ruleForm2.seat,spotlist:this.ruleForm2.stationlist}
                 let para={train:JSON.stringify(train)};
-                requestaddTrain(para).then(res=>{
-                    if(res.data==1)
-                        this.$message({
-                            message:"火车添加成功,火车票将于7天后起售",
-                            type:"success"
-                        })
+                requestupdateTrain(para).then(res=>{
+                    this.$message({
+                    message:"信息修改成功,明天开售7天后的新车次",
+                    type:'success'
+                })
                 });
             }
-            
-            
-          } else {
-            this.$message({
-                message:"请将信息填充完整",
-                type:'error'
-            })
-            return false;
-          }
-        });
       }
 
     },
-    created(){
-        console.log(1)
-        requestgetSeats().then(res=>{
-                //console.log(res);
-                this.AllSeatType=res.data
-            })
-        requestgetSpots({spotname:''}).then(res=>{
-                this.AllStation=res.data;
-            })
-    }
+    
     
 }
 function sortKey(array,key){
