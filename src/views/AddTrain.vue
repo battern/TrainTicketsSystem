@@ -1,5 +1,5 @@
 <template>
-    <el-form :model="ruleForm2" status-icon :rules="rules2" ref="ruleForm2" label-width="100px" class="demo-ruleForm">
+    <el-form :model="ruleForm2"  :rules="rules2" ref="ruleForm2" label-width="100px" class="demo-ruleForm">
             <el-form-item label="车次名:" prop="trainname">
                 <el-input  v-model.number="ruleForm2.trainname" autocomplete="off"></el-input>
             </el-form-item>
@@ -132,14 +132,7 @@ export default {
             }
         
       };
-      var checkTrainNum=(rule, value, callback) => {//车次编号
-            if (!Number.isInteger(value)) {
-                callback(new Error('请输入数字值'));
-            } else {
-                callback();
-            }
-        
-      };
+
         return{
             AllSeatType:[],
             seattype:'',
@@ -220,10 +213,11 @@ export default {
                 for(var i=0;i<this.ruleForm2.stationlist.length;i++){
                     if(this.ruleForm2.stationname==this.ruleForm2.stationlist[i].spotname){
                         flag2=i;
-                        //console.log(flag2)
-                    }else{
-                        if(!((this.ruleForm2.miles>this.ruleForm2.stationlist[i].miles&&this.ruleForm2.usingtime>(this.ruleForm2.stationlist[i].arrivetime+this.ruleForm2.stationlist[i].staytime))//添加后来的车次
-                        ||(this.ruleForm2.miles<this.ruleForm2.stationlist[i].miles&&this.ruleForm2.usingtime+this.ruleForm2.stoptime<this.ruleForm2.stationlist[i].arrivetime))
+                }else{
+                        if(!((this.ruleForm2.miles>this.ruleForm2.stationlist[i].miles
+                        &&this.ruleForm2.usingtime>(this.ruleForm2.stationlist[i].arrivetime+this.ruleForm2.stationlist[i].staytime))//添加后来的车次
+                        ||(this.ruleForm2.miles<this.ruleForm2.stationlist[i].miles
+                        &&this.ruleForm2.usingtime+this.ruleForm2.stoptime<this.ruleForm2.stationlist[i].arrivetime))
                     ){
                         flag=1;
                         break;

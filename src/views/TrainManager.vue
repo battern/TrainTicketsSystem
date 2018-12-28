@@ -16,12 +16,12 @@
         <el-table-column label="空调类型" prop="airtype" width="300" align="center"></el-table-column>
         <el-table-column label="操作" width="300">
                             <template slot-scope="scope">
-                                <el-button
+                                <!-- <el-button
                                 @click.native.prevent="deleteRow(scope.row.Tno)"
                                 type="text"
                                 size="small">
                                 移除
-                                </el-button>
+                                </el-button> -->
                                 <el-button
                                 @click.native.prevent="goToEdit(scope.row.Tno)"
                                 type="text"

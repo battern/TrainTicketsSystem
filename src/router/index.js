@@ -57,14 +57,13 @@ export default new Router({
         path: '/buyticket',
         name: '买票',
         component: BuyTicket,
-        status:1,//1表示是普通用户,2表示管理员
+        status:1,
         hidden:true
       },
       {
         path: '/orderinfo',
         name: '个人订单信息',
         component: OrderInfo,
-        //status:1//1表示是普通用户,2表示管理员
         status1:-1,
         status2:1,
         status3:2
@@ -73,7 +72,6 @@ export default new Router({
         path: '/addtrain',
         name: '添加车次',
         component: AddTrain,
-        //status:2//1表示是普通用户,2表示管理员
         status1:-1,
         status2:-1,
         status3:2
@@ -82,7 +80,6 @@ export default new Router({
         path: '/addseat',
         name: '座位信息管理',
         component: AddSeat,
-        //status:2//1表示是普通用户,2表示管理员
         status1:-1,
         status2:-1,
         status3:2

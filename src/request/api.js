@@ -56,7 +56,7 @@ export const requestgetAllCity=()=>{ return axios.get(`${base}/getAllCity`);};
 //获取座位的信息
 export const requestFindSeat=(params)=>{ return axios.get(`${base}/FindSeat`,{ params: params });};
 
-//获取座位的信息
+//提交订单
 export const requestTakeOrder=(params)=>{ return axios.post(`${base}/TakeOrder`,qs.stringify(params));};
 
 //付款
